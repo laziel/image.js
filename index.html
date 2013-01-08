@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><!-- manifest="cache.manifest" -->
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=320, initial-scale=1.0, user-scalable=no" /> <!-- device-width -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<!--
+<link rel="apple-touch-icon" href="img/icon.png"/>
+<link rel="stylesheet" href="css/w.css" type="text/css" />
+-->
+<title>Bombay : make it sketchable</title>
+</head>
+<body>
+
+<div id="wrap">
+	<div id="bombay"></div>
+	
+	<div id="actionController" class="controller2">
+		<div class="action left">
+			<button type="button" class="btnClear" id="btnClear">CLEAR</button>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="js/bombay.Canvas.js"></script>
+<script type="text/javascript" src="js/bombay.Brush.js"></script>
+<script type="text/javascript" src="js/bombay.Util.js"></script>
+
+<script type="text/javascript">
+	var oCanvas;
+    var oBrush;
+    
+    window.addEventListener("load", function(){
+        window.scrollTo(0,1);
+        
+        oCanvas = new bombay.Canvas({
+            "elContainer": "bombay",
+            "nWidth": 320,
+            "nHeight": 440
+        });
+        
+        oBrush = new bombay.Brush({
+           "sImageURL": "brushes/brush9.png",
+           "fOnLoad": function(){
+               oCanvas.useBrush(this);       
+           }
+        });
+       
+       document.getElementById("btnClear").addEventListener("click", function(){
+          oCanvas.clear(); 
+       });
+    });
+	
+</script>
+</body>
+</html>
