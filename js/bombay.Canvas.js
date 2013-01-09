@@ -13,7 +13,7 @@ bombay.Canvas = function(htOptions){
 	
 	this._initElement(htOptions);
 	this._initVar(htOptions);
-	this._attachEvent();
+	this._attachEvent();	
 };
 
 /**
@@ -23,13 +23,15 @@ bombay.Canvas.prototype._initElement = function(htOptions){
 	this._elContainer = (typeof htOptions.elContainer == "string") ? document.getElementById(htOptions.elContainer) : htOptions.elContainer;
 	
 	// append <canvas> to container
-	var nWidth = htOptions.nWidth || 320;
-	var nHeight = htOptions.nHeight || 400;
+	var nWidth = htOptions.nWidth || 100;
+	var nHeight = htOptions.nHeight || 100;
 	this._elCanvas = bombay.Util.getNewCanvas(nWidth, nHeight);
 	this._elContainer.appendChild(this._elCanvas);
 	
 	// get canvas offset
 	this._htCanvasOffset = bombay.Util.getOffset(this._elCanvas);	
+	this._nWidth = this._elCanvas.width;
+	this._nHeight = this._elCanvas.height;
 };
 
 /**
@@ -47,12 +49,10 @@ bombay.Canvas.prototype._initVar = function(htOptions){
 	
 	this._htDeviceInfo = bombay.Util.getDeviceInfo(); 
 	this._nRatio = this._htDeviceInfo.nRatio;
-	this._nWidth = this._elCanvas.width;
-	this._nHeight = this._elCanvas.height;
 	
 	// set default style
 	this.setLineColor(htOptions.sStrokeStyle || "#000000");
-	this.setLineWidth(htOptions.nLineWidth   || 2);
+	this.setLineWidth(htOptions.nLineWidth   || 2);	
 	
 	// event listeners
 	var self = this;
@@ -127,6 +127,16 @@ bombay.Canvas.prototype.getLineColor = function(){
 bombay.Canvas.prototype.useBrush = function(oBrush){
 	if(oBrush instanceof bombay.Brush === false){
 		return false;
+	}
+	
+	// Android warning
+	if(this._htDeviceInfo.bIsAndroid){
+		try {
+			var sWarning = "bombay.Brush cannot be used on Android devices";
+			("warn" in console) ? console.warn(sWarning) : console.log(sWarning);
+		} catch(e){} finally {
+			sWarning = null;
+		}
 	}
 	
 	this._oBrush = oBrush;
