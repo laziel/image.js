@@ -59,7 +59,9 @@
            }
         });
 
-       document.getElementById("btnClear").addEventListener("click", function(){
+       // temporary action button
+       var elBtnClear = document.getElementById("btnClear");
+       elBtnClear.addEventListener("click", function(){
           oCanvas.clear(); 
        });
     });
