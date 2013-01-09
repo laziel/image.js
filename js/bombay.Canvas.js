@@ -291,13 +291,16 @@ bombay.Canvas.prototype.toDataURL = function(){
 
 /**
  * interface of canvas.drawImage
- * @param vImage
- * @param nX
- * @param nY
- * @param nWidth
- * @param nHeight
+ * @param {Variant} vImage HTMLImageElement or HTMLCanvasElement
+ * @param {Number} nX
+ * @param {Number} nY
+ * @param {Number} nWidth (optional)
+ * @param {Number} nHeight (optional)
  */
 bombay.Canvas.prototype.drawImage = function(vImage, nX, nY, nWidth, nHeight){
+	// nWidth, nHeight can be omitted 
+	nWidth = (!nWidth && vImage.width) ? vImage.width : nWidth;
+	nHeight = (!nHeight && vImage.height) ? vImage.height : nHeight;
 	nWidth = nWidth || (this._nWidth * this._nRatio);
 	nHeight = nHeight || (this._nHeight * this._nRatio);
 	
