@@ -4,11 +4,10 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=320, initial-scale=1.0, user-scalable=no" /> <!-- device-width -->
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<!--
-<link rel="apple-touch-icon" href="img/icon.png"/>
-<link rel="stylesheet" href="css/w.css" type="text/css" />
--->
 <title>Bombay : make it sketchable</title>
+<style type="text/css">
+    #bombay { width:200px; margin:10px auto; border:2px solid #eee; }
+</style>
 </head>
 <body>
 
@@ -20,6 +19,7 @@
 			<button type="button" class="btnClear" id="btnClear">CLEAR</button>
 		</div>
 	</div>
+
 </div>
 
 <script type="text/javascript" src="js/bombay.Canvas.js"></script>
@@ -35,17 +35,17 @@
         
         oCanvas = new bombay.Canvas({
             "elContainer": "bombay",
-            "nWidth": 320,
-            "nHeight": 440
+            "nWidth": 200,
+            "nHeight": 200
         });
         
         oBrush = new bombay.Brush({
            "sImageURL": "brushes/brush9.png",
            "fOnLoad": function(){
-               oCanvas.useBrush(this);       
+               //oCanvas.useBrush(this);       
            }
         });
-       
+
        document.getElementById("btnClear").addEventListener("click", function(){
           oCanvas.clear(); 
        });

@@ -7,6 +7,9 @@ var bombay = (typeof bombay == "undefined") ? {} : bombay;
 
 /**
  * Bombay.Brush
+ * @param {Hash Table} htOptions
+ * @param {String}   htOptions.sImageURL
+ * @param {Function} htOptions.fOnLoad
  * @example 
  * var oBrush = new bombay.Brush({
  * 	"sImageURL": "brushes/brush.png",
@@ -32,6 +35,10 @@ bombay.Brush.prototype._initVar = function(htOptions){
 	this._fOnLoadBrush = htOptions.fOnLoad;
 };
 
+/**
+ * get loaded brush image
+ * @private
+ */
 bombay.Brush.prototype._loadBrush = function(htOptions){
 	var self = this;
 	this._elBrushImage = new Image();
@@ -43,6 +50,10 @@ bombay.Brush.prototype._loadBrush = function(htOptions){
 	this._elBrushImage.src = htOptions.sImageURL; 	
 };
 
+/**
+ * on brush image loaded
+ * @private 
+ */
 bombay.Brush.prototype._onLoadBrush = function(){
 	this._elBrushImage = this._elBrushImage; // set default brush image
 	if(typeof this._fOnLoadBrush == "function"){
@@ -51,7 +62,7 @@ bombay.Brush.prototype._onLoadBrush = function(){
 };
 
 /**
- * 처음 기본 브러시 이미지로 되돌림
+ * restore to brush image. it makes color as black
  * @returns {Boolean} true 
  */
 bombay.Brush.prototype.restore = function(){
@@ -61,21 +72,19 @@ bombay.Brush.prototype.restore = function(){
 };
 
 /**
- * 브러시를 지정한 색상으로 만들어 반환
- * @param {Object} oBrush 브러시 이미지
- * @param {String} sColor 색상코드
+ * get brush colored. see bombay.Canvas.prototype.setLineColor
+ * @param {String} sColor ColorCode. HEX or RGB
+ * @returns {HTMLElement} elBrushImage colored brush image
  */
 bombay.Brush.prototype.setColor = function(sColor){
-	// 브러시 크기와 같은 캔버스를 만들어서 이미지 복제
+	// copy brush image to new temporary canvas
 	var nWidth = this._elBrushImage.width;
 	var nHeight = this._elBrushImage.height;
-
-	// copy brush image to new temporary canvas
 	var elTmpCanvas = bombay.Util.getNewCanvas(nWidth, nHeight);
 	var oTmpContext = elTmpCanvas.getContext("2d");
-		oTmpContext.drawImage(this._elBrushImage, 0, 0);
+	oTmpContext.drawImage(this._elBrushImage, 0, 0);
 	
-	// 픽셀단위 이미지 데이터 조작
+	// get image colored
 	var htRGB = bombay.Util.getRGBColor(sColor);
 	var oData = oTmpContext.getImageData(0, 0, nWidth, nHeight);
 	var nLength = nWidth * nHeight * 4;
@@ -87,7 +96,6 @@ bombay.Brush.prototype.setColor = function(sColor){
 		//oData[i+3] = nAlpha;
 	}
 
-	// 컨텍스트에 반영하고 브러시 이미지 대체
 	oTmpContext.putImageData(oData, 0, 0);
 	
 	// flush after return
@@ -101,14 +109,19 @@ bombay.Brush.prototype.setColor = function(sColor){
 };
 
 /**
- * 브러시 이미지 반환하는 함수. 
- * bombay.Canvas 에서 사용하기 위한 인터페이스
+ * get current brush image 
+ * interface for bombay.Canvas
  * @returns {HTMLElement}
  */
 bombay.Brush.prototype.getBrush = function(){
 	return this._elBrushImage;
 };
 
+/**
+ * free variables
+ * interface for bombay.Canvas.prototype.unuseBrush
+ */
 bombay.Brush.prototype.destroy = function(){
 	this._elBrushImage = null;
+	this._fOnLoadBrush = null;
 };

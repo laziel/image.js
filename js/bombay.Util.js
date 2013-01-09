@@ -25,7 +25,7 @@ bombay.Util = (function(){
 	}
 
 	/**
-	 * get device information 
+	 * Get device information 
 	 * @returns {Hash Table} 
 	 */
 	function getDeviceInfo(){
@@ -33,7 +33,7 @@ bombay.Util = (function(){
 	}
 	
 	/**
-	 * get event names to attach
+	 * Get event names to attach
 	 * @returns {Hash Table}
 	 */
 	function getTouchEventName(){
@@ -51,7 +51,7 @@ bombay.Util = (function(){
 	}
 	
 	/**
-	 * get touch event position information
+	 * Get touch event position information
 	 * @returns {Hash Table}
 	 */
 	function getTouchInfo(e){
@@ -75,7 +75,7 @@ bombay.Util = (function(){
 	}
 	
 	/**
-	 * 빈 캔버스 엘리먼트를 생성해서 반환하는 함수
+	 * Get empty HTMLCanvasElement considering Retina Display
 	 * @param {Number} nWidth
 	 * @param {Number} nHeight
 	 * @returns {HTMLCanvasElement}
@@ -104,7 +104,7 @@ bombay.Util = (function(){
 	}
 	
 	/**
-	 * 공백을 제거한 문자열 반환
+	 * Strip whitespace from the beginning and end of string 
 	 * @param {String} sStr
 	 * @returns {String}
 	 */
@@ -113,14 +113,13 @@ bombay.Util = (function(){
 	}
 	
 	/**
-	 * 문자열을 분석된 RGB 값 해시테이블로 반환
-	 * @param {String} sColor 색상 rgb(0,0,0) or #123456
+	 * Get parsed RGB string
+	 * @param {String} sColor HEX or RGB expression string (rgb(0,0,0) or #123456)
 	 * @returns {Hash Table}
 	 */
 	function getRGBColor(sColor){
-		// HEX 컬러코드면 RGB로 변환
-		sColor = this.getTrim(sColor);
-		sColor = (sColor.charAt(0) == "#") ? this.getHEX2RGB(sColor) : sColor;			
+		sColor = this.getTrim(sColor); // strip whitespace
+		sColor = (sColor.charAt(0) == "#") ? this.getHEX2RGB(sColor) : sColor; // HEX to RGB			
 
 		var sRGB = sColor.match(_htVar.rxRgb)[0];
 		var aRGB = sRGB.split(",");
@@ -134,8 +133,8 @@ bombay.Util = (function(){
 	}
 
 	/**
-	 * HEX 색상코드를 RGB 값의 나열로 변환해서 반환하는 함수
-	 * @param {String} sColor #FFF or #FFFFFF
+	 * Convert HEX color code to RGB string 
+	 * @param {String} sColor HEX color code (#FFF or #FFFFFF)
 	 * @returns {String} 255,255,255
 	 */
 	function getHEX2RGB(sColor){
@@ -156,8 +155,8 @@ bombay.Util = (function(){
 	}
 
 	/**
-	 * 지정한 엘리먼트의 오프셋 위치 반환하는 함수
-	 * forked jindo.$Element.prototype.offset_get (2.1.0)
+	 * Get HTML element offset 
+	 * forked from jindo.$Element.prototype.offset_get (2.1.0)
 	 * @param {HTMLElement} elBase
 	 * @returns {Hash Table} {left, top}
 	 */
@@ -245,7 +244,7 @@ bombay.Util = (function(){
 	}
 	
 	/**
-	 * 두 지점 사이의 거리
+	 * Get distance between two points.
 	 * @param htPoint1
 	 * @param htPoint2
 	 * @returns {Number}
@@ -257,7 +256,7 @@ bombay.Util = (function(){
 	}
 
 	/**
-	 * 두 지점 사이의 각도
+	 * Get angle between two points.
 	 * @param htPoint1
 	 * @param htPoint2
 	 * @returns {Number}

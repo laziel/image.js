@@ -17,7 +17,7 @@ bombay.Canvas = function(htOptions){
 };
 
 /**
- * 엘리먼트 변수 초기화
+ * initialize elements
  */
 bombay.Canvas.prototype._initElement = function(htOptions){
 	this._elContainer = (typeof htOptions.elContainer == "string") ? document.getElementById(htOptions.elContainer) : htOptions.elContainer;
@@ -33,10 +33,9 @@ bombay.Canvas.prototype._initElement = function(htOptions){
 };
 
 /**
- * 변수 초기화
+ * initialize variables
  */
 bombay.Canvas.prototype._initVar = function(htOptions){
-//	this._aCoords = [];
 	this._oBrush = null;
 	this._oContext = this._elCanvas.getContext("2d");
 	this._htCanvasOffset = bombay.Util.getOffset(this._elCanvas);
@@ -91,8 +90,8 @@ bombay.Canvas.prototype._onTouchEnd = function(htInfo){
 };
 
 /**
- * 선 색깔 지정
- * @param {String} sColor HEX 또는 RGB(A) 색상
+ * set color of line
+ * @param {String} sColor HEX or RGB(A). shortened HEX acceptable.
  */
 bombay.Canvas.prototype.setLineColor = function(sColor){ 
 //	this._oContext.strokeStyle = sColor;
@@ -104,8 +103,8 @@ bombay.Canvas.prototype.setLineColor = function(sColor){
 };
 
 /**
- * 선 굵기 지정
- * @param {Number} nWidth 소수점 단위 사용 가능
+ * set width of line
+ * @param {Number} nWidth line width as float. 1.0 ~ 5.0(recommended)  
  */
 bombay.Canvas.prototype.setLineWidth = function(nWidth){
 //	this._oContext.lineWidth = nWidth;
@@ -113,7 +112,7 @@ bombay.Canvas.prototype.setLineWidth = function(nWidth){
 };
 
 /**
- * 선 색깔 반환
+ * get color of line
  * @returns {String}
  */
 bombay.Canvas.prototype.getLineColor = function(){
@@ -121,7 +120,7 @@ bombay.Canvas.prototype.getLineColor = function(){
 };
 
 /**
- * 브러시 사용
+ * set to use bombay.Brush
  * @param {Object} oBrush instance of bombay.Brush
  * @returns {Boolean}
  */
@@ -136,14 +135,17 @@ bombay.Canvas.prototype.useBrush = function(oBrush){
 };
 
 /**
- * 브러시 사용하지 않음. 현재 사용중인 브러시 정보 삭제
+ * set to unuse current Brush
  */
 bombay.Canvas.prototype.unuseBrush = function(){
+	if(this._oBrush){ // free memory
+		this._oBrush.destroy();
+	}
 	this._oBrush = this._elBrushImage = null;
 };
 
 /**
- * 캔버스 내부 좌표를 반환하는 함수
+ * get coordinates on canvas
  * @private
  * @param htInfo
  * @returns {Hash Table}
@@ -157,9 +159,9 @@ bombay.Canvas.prototype._getCoordinate = function(htInfo){
 };
 
 /**
- * 터치 이벤트에 따라 현재 설정에 맞추어 선 그리기
+ * draw lines by touch event. called automatically at _onTouchMove and _onTouchEnd 
  * @private
- * @param {Hash Table} htInfo 이벤트 정보
+ * @param {Hash Table} htInfo
  */
 bombay.Canvas.prototype._drawByTouch = function(htInfo){
     var htCoordFrom = this._htCoord || this._getCoordinate(htInfo);
@@ -173,30 +175,39 @@ bombay.Canvas.prototype._drawByTouch = function(htInfo){
 };
 
 /**
- * 선 좌표를 정수형으로 보정해서 반환하는 함수
- * 정수형 좌표를 사용하면 선은 거칠어지지만 속도는 빨라진다 (저사양기기 대응용)
+ * returns rounded coordinate position for speed.
+ * rounded position value makes line rough but cuts time to process.
  * default : Off
  * @private
+ * @param {Number} n
  */
 bombay.Canvas.prototype._getRoundedPos = function(n){
     return (this._bSpeedUp) ? Math.round(n) : n;
 };
     
 /**
- * 부드러운 선 그리기
+ * draw default line without bombay.Brush
  * @private
+ * @param {Hash Table} htCoordFrom
+ * @param {Hash Table} htCoordTo
+ * @param {Hash Table} htOptions
  */
 bombay.Canvas.prototype._drawLine = function(htCoordFrom, htCoordTo, htOptions){
-	var htOptions = htOptions || {};
+	var htOptions  = htOptions || {};
+	var oContext   = htOptions.oContext || this._oContext;
 	var nLineWidth = htOptions.nLineWidth || this._nLineWidth;
-	if(this._bIsAndroid){
+	
+	// adjust line width for difference of Android/iOS
+	if(this._htDeviceInfo.bIsAndroid){
 		nLineWidth = Math.pow(nLineWidth, 1.7);
 	}
-	var oContext = htOptions.oContext || this._oContext;
+	// accept temporary line color as option
+	// line color will be restored in _onTouchStart
 	if(htOptions.sColor){
 		oContext.fillStyle = htOptions.sColor;
 	}
 	
+	// draw small circles on touch path
 	var nX, nY;
 	var nDistance = parseInt(bombay.Util.distanceBetween(htCoordFrom, htCoordTo));
 	var nAngle = bombay.Util.angleBetween(htCoordFrom, htCoordTo);
@@ -211,11 +222,15 @@ bombay.Canvas.prototype._drawLine = function(htCoordFrom, htCoordTo, htOptions){
 };
 
 /**
- * 브러시로 선 그리기
+ * draw brushed line with bombay.Brush
  * @private
+ * @param {Hash Table} htCoordFrom
+ * @param {Hash Table} htCoordTo
+ * @param {Hash Table} htOptions
  */
 bombay.Canvas.prototype._drawBrush = function(htCoordFrom, htCoordTo, htOptions){
-	// 안드로이드는 브러시로 그리면 이상하게 나온다
+	// cannot be activated in Android (~4.1)
+	// as brush cannot be colored 
 	if(this._htDeviceInfo.bIsAndroid){
 		return this._drawLine(htCoordFrom, htCoordTo, htOptions);
 	}
@@ -244,9 +259,8 @@ bombay.Canvas.prototype._drawBrush = function(htCoordFrom, htCoordTo, htOptions)
 	}
 };
 
-
 /**
- * 문자열로 반환
+ * get canvas data as Base64 string 
  * @returns {String}
  */
 bombay.Canvas.prototype.toString = function(){
@@ -258,7 +272,7 @@ bombay.Canvas.prototype.toString = function(){
 };
 
 /**
- * dataURL 반환
+ * interface of canvas.toDataURL
  * @returns {String}
  */
 bombay.Canvas.prototype.toDataURL = function(){
@@ -266,7 +280,7 @@ bombay.Canvas.prototype.toDataURL = function(){
 };
 
 /**
- * drawImage 인터페이스
+ * interface of canvas.drawImage
  * @param vImage
  * @param nX
  * @param nY
@@ -281,16 +295,15 @@ bombay.Canvas.prototype.drawImage = function(vImage, nX, nY, nWidth, nHeight){
 };
 
 /**
- * 지우개 모드
- * @param {Boolean} bActivate 지우개 모드 활성화 여부
+ * set eraser mode
+ * @param {Boolean} bActivate
  */
 bombay.Canvas.prototype.eraser = function(bActivate){
-	// 지우개 모드
-	if(bActivate){
+	if(bActivate){	// activate eraser
 		this._oContext.globalCompositeOperation = "destination-out";
 		this._sTmpStyle = this.getLineColor();
 		this.setLineColor("#fff");
-	} else { // 펜 모드
+	} else {		// deactivate eraser (means using draw mode)
 		this._oContext.globalCompositeOperation = "source-over";
 		this.setLineColor(this._sTmpStyle);
 		delete this._sTmpStyle;
@@ -298,7 +311,7 @@ bombay.Canvas.prototype.eraser = function(bActivate){
 };
 
 /**
- * 캔버스 영역 전체 지우기
+ * clear entire canvas area
  */
 bombay.Canvas.prototype.clear = function(bFireEvent){
 	this._oContext.save();
