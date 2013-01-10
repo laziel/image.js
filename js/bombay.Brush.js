@@ -30,64 +30,94 @@ bombay.Brush = function(htOptions){
  * @private
  */
 bombay.Brush.prototype._initVar = function(htOptions){
-	this._sColor = "#000000";   // default: black
-	this._elBrushImage = new Image(); // default: empty image
+	// default color: black
+	this._sDefaultColor = htOptions.sDefaultColor || "#000000";  
+	this._sColor = this._sDefaultColor; // current brush color
+	
+	// default brush: empty image
+	this._nWidth = 0;
+	this._nHeight = 0;
+	this._elBrushImage = new Image();
+	
+	// callback function on load image 
 	this._fOnLoadBrush = htOptions.fOnLoad;
 };
 
 /**
- * get loaded brush image
+ * Get loaded brush image
  * @private
  */
 bombay.Brush.prototype._loadBrush = function(htOptions){
 	var self = this;
-	this._elBrushImage = new Image();
-	this._elBrushImage.onload = function(){
+	this._elLoadedBrush = new Image();
+	this._elLoadedBrush.onload = function(){
 		self._onLoadBrush.call(self);
 	};
 	
 	// start to load
-	this._elBrushImage.src = htOptions.sImageURL; 	
+	this._elLoadedBrush.src = htOptions.sImageURL; 	
 };
 
 /**
- * on brush image loaded
+ * On brush image loaded
  * @private 
  */
 bombay.Brush.prototype._onLoadBrush = function(){
-	this._elBrushImage = this._elBrushImage; // set default brush image
+	// set default brush image
+	this._elBrushImage = this._elLoadedBrush;
+	
+	// brush size
+	this._nWidth = this._elLoadedBrush.width;
+	this._nHeight = this._elLoadedBrush.height;
+	
 	if(typeof this._fOnLoadBrush == "function"){
 		this._fOnLoadBrush.apply(this);
 	}
 };
 
 /**
- * restore to brush image. it makes color as black
+ * Restore to brush image. it makes color as black
  * @returns {Boolean} true 
  */
 bombay.Brush.prototype.restore = function(){
 	this._sColor = "#000000";
-	this._elBrushImage = this._elBrushImage;
+	this._elBrushImage = this._elLoadedBrush;
 	return true;
 };
 
 /**
- * get brush colored. see bombay.Canvas.prototype.setLineColor
+ * Get brush colored. see bombay.Canvas.prototype.setLineColor
  * @param {String} sColor ColorCode. HEX or RGB
  * @returns {HTMLElement} elBrushImage colored brush image
  */
 bombay.Brush.prototype.setColor = function(sColor){
+	// empty image
+	if(!this._elLoadedBrush){
+		return this._elBrushImage;
+	}
+	// setColor same as default means restore
+	if(sColor == this._sDefaultColor){
+		this.restore();
+		return this._elBrushImage;
+	}
+	
+	var elColoredBrush = this._getBrushColored(sColor);
+	this._sColor = sColor;
+	this._elBrushImage = elColoredBrush;
+
+	return this._elBrushImage;
+};
+
+bombay.Brush.prototype._getBrushColored = function(sColor){
 	// copy brush image to new temporary canvas
-	var nWidth = this._elBrushImage.width;
-	var nHeight = this._elBrushImage.height;
-	var elTmpCanvas = bombay.Util.getNewCanvas(nWidth, nHeight);
+	var elTmpCanvas = bombay.Util.getNewCanvas(this._nWidth, this._nHeight);
 	var oTmpContext = elTmpCanvas.getContext("2d");
-	oTmpContext.drawImage(this._elBrushImage, 0, 0);
+	oTmpContext.drawImage(this._elLoadedBrush, 0, 0);
 	
 	// get image colored
 	var htRGB = bombay.Util.getRGBColor(sColor);
-	var oData = oTmpContext.getImageData(0, 0, nWidth, nHeight);
-	var nLength = nWidth * nHeight * 4;
+	var oData = oTmpContext.getImageData(0, 0, this._nWidth, this._nHeight);
+	var nLength = this._nWidth * this._nHeight * 4;
 	
 	for(var i =0; i < nLength; i += 4){
 		oData.data[i] = htRGB.nRed;
@@ -97,19 +127,17 @@ bombay.Brush.prototype.setColor = function(sColor){
 	}
 
 	oTmpContext.putImageData(oData, 0, 0);
-	
+
 	// flush after return
 	try {
-		this._sColor = sColor;
-		this._elBrushImage = elTmpCanvas;
-		return this._elBrushImage;
+		return elTmpCanvas;
 	} finally {
-		elTmpCanvas = oTmpContext = null;
+		elTmpCanvas = oTmpContext = oData = null;
 	}
 };
 
 /**
- * get current brush image 
+ * Get current brush image 
  * interface for bombay.Canvas
  * @returns {HTMLElement}
  */
@@ -123,5 +151,6 @@ bombay.Brush.prototype.getBrush = function(){
  */
 bombay.Brush.prototype.destroy = function(){
 	this._elBrushImage = null;
+	this._elLoadedBrush = null;
 	this._fOnLoadBrush = null;
 };

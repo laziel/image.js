@@ -20,8 +20,19 @@ bombay.Util = (function(){
 		_htVar.bIsIOS =  (navigator.userAgent.indexOf("Mac OS") > -1);
 		_htVar.bIsAndroid = (navigator.userAgent.indexOf("Android") > -1);
 		_htVar.bIsRetina = _htVar.bIsIOS ? ((window.devicePixelRatio > 1) ? true : false) : false;
-		_htVar.nRatio = _htVar.bIsRetina ? (window.devicePixelRatio * window.devicePixelRatio) : 1;
-		_htVar.bHasTouchEvent = 'ontouchstart' in window;		
+		_htVar.nRatio = _htVar.bIsRetina ? window.devicePixelRatio : 1;
+		_htVar.bHasTouchEvent = 'ontouchstart' in window;
+		
+		// get OS version (Android/iOS only)
+		_htVar.nOSVersion = 0;
+		var rxVersion = _htVar.bIsAndroid ? /Android\s(\d\.\d)/i : (_htVar.bIsIOS ? /OS\s([\d|\_]+\s)/i : null);
+		if(rxVersion){
+			var aMatchVer = navigator.userAgent.match(rxVersion);
+			if(aMatchVer !== null && aMatchVer.length > 1){
+				_htVar.nOSVersion = parseFloat(aMatchVer[1]);
+			}
+			aMatchVer = rxVersion = null;
+		}
 	}
 
 	/**
@@ -38,9 +49,10 @@ bombay.Util = (function(){
 	 */
 	function getTouchEventName(){
 		var htNames = {
-			"start": (_htVar.bHasTouchEvent ? "touchstart" : "mousedown"),
-			"move" : (_htVar.bHasTouchEvent ? "touchmove"  : "mousemove"),
-			"end"  : (_htVar.bHasTouchEvent ? "touchend"   : "mouseup")
+			"start"	: (_htVar.bHasTouchEvent ? "touchstart" : "mousedown"),
+			"move"	: (_htVar.bHasTouchEvent ? "touchmove"  : "mousemove"),
+			"end"	: (_htVar.bHasTouchEvent ? "touchend"   : "mouseup"),
+			"cancel": (_htVar.bHasTouchEvent ? "touchcancel": "mouseout")
 		};
 		
 		try {
@@ -95,8 +107,8 @@ bombay.Util = (function(){
 			elCanvas.setAttribute("height", nHeight);			
 		}
 
-		// for Android GPU acceleration
-		if(_htVar.bIsAndroid){
+		// GPU acceleration for Android 4.0 or later 
+		if(_htVar.bIsAndroid && _htVar.nOSVersion >= 4.0){
 			elCanvas.style["-webkit-transform"] = "translateZ(0)";
 		}
 		
@@ -270,15 +282,15 @@ bombay.Util = (function(){
 	_initVar();
 	
 	return {
-        "angleBetween"     : angleBetween,
-        "distanceBetween"  : distanceBetween,
-		"getTrim"	 	   : getTrim,
-		"getNewCanvas"	   : getNewCanvas,
-		"getRGBColor"	   : getRGBColor,
-		"getHEX2RGB"       : getHEX2RGB,
-		"getOffset"	       : getOffset,
-		"getDeviceInfo"    : getDeviceInfo,
-		"getTouchInfo"     : getTouchInfo,
-        "getTouchEventName": getTouchEventName
+		"angleBetween" : angleBetween,
+		"distanceBetween" : distanceBetween,
+		"getTrim" : getTrim,
+		"getNewCanvas" : getNewCanvas,
+		"getRGBColor" : getRGBColor,
+		"getHEX2RGB" : getHEX2RGB,
+		"getOffset" : getOffset,
+		"getDeviceInfo" : getDeviceInfo,
+		"getTouchInfo" : getTouchInfo,
+		"getTouchEventName" : getTouchEventName
 	};
 })();

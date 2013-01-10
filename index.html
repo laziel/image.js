@@ -6,10 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <title>Bombay : make it sketchable</title>
 <style type="text/css">
-    #bombay { width:200px; margin:10px auto; border:2px solid #eee; }
-    #actionController { width:200px; margin:0 auto; }
+    #bombay { width:300px; height:200px; margin:10px auto; border:2px solid #eee; }
+    #actionController { width:300px; margin:0 auto; }
     #btnClear {
-    	width:200px; border:1px solid #eee; margin:10px auto; border-radius:5px;
+    	width:300px; border:1px solid #eee; margin:10px auto; border-radius:5px;
     	font-family:Tahoma; padding:10px 0px; 
 		background: #ffffff; /* Old browsers */
 		background: -moz-linear-gradient(top,  #ffffff 0%, #f1f1f1 50%, #e1e1e1 51%, #f6f6f6 100%); /* FF3.6+ */
@@ -20,11 +20,27 @@
 		background: linear-gradient(to bottom,  #ffffff 0%,#f1f1f1 50%,#e1e1e1 51%,#f6f6f6 100%); /* W3C */
 		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#f6f6f6',GradientType=0 ); /* IE6-9 */
     }
+    
+    .colorTab { display:block; width:300px; height:40px; margin:0 auto; }
+    .btnColor { border:none; width:30px; height:30px; float:left; margin-right:5px; }
+    .colorTab .red { background:#E53D37; }
+    .colorTab .green { background:#43BB00; }
+    .colorTab .blue { background:#0999D6; }
+    .colorTab .black { background:#000; }
+    .colorTab .white { background:#fff; border:1px solid #eee; }
 </style>
 </head>
 <body>
 
 <div id="wrap">
+	<div class="colorTab">
+		<button type="button" class="btnColor red"   id="btnRed"></button>
+		<button type="button" class="btnColor green" id="btnGreen"></button>
+		<button type="button" class="btnColor blue"  id="btnBlue"></button>
+		<button type="button" class="btnColor black" id="btnBlack"></button>
+		<button type="button" class="btnColor white" id="btnWhite"></button>
+	</div>
+	
 	<div id="bombay"></div>
 	
 	<div id="actionController" class="controller2">
@@ -48,14 +64,14 @@
         
         oCanvas = new bombay.Canvas({
             "elContainer": "bombay",
-            "nWidth": 200,
+            "nWidth": 300,
             "nHeight": 200
         });
         
         oBrush = new bombay.Brush({
            "sImageURL": "brushes/brush9.png",
            "fOnLoad": function(){
-               //oCanvas.useBrush(this);
+               oCanvas.useBrush(this);
            }
         });
 
@@ -64,6 +80,22 @@
        elBtnClear.addEventListener("click", function(){
           oCanvas.clear(); 
        });
+       
+       document.getElementById("btnRed").addEventListener("click", function(){
+    	  oCanvas.setLineColor("#E53D37"); 
+       });
+       document.getElementById("btnGreen").addEventListener("click", function(){
+     	  oCanvas.setLineColor("#43BB00"); 
+        });
+       document.getElementById("btnBlue").addEventListener("click", function(){
+     	  oCanvas.setLineColor("#0999D6"); 
+        });
+       document.getElementById("btnBlack").addEventListener("click", function(){
+     	  oCanvas.setLineColor("#000000"); 
+        });
+       document.getElementById("btnWhite").addEventListener("click", function(){
+      	  oCanvas.setLineColor("#FFFFFF"); 
+         });
     });
 	
 </script>

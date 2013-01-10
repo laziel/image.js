@@ -20,6 +20,7 @@ bombay.Canvas = function(htOptions){
  * initialize elements
  */
 bombay.Canvas.prototype._initElement = function(htOptions){
+	// get container element
 	this._elContainer = (typeof htOptions.elContainer == "string") ? document.getElementById(htOptions.elContainer) : htOptions.elContainer;
 	
 	// append <canvas> to container
@@ -27,11 +28,6 @@ bombay.Canvas.prototype._initElement = function(htOptions){
 	var nHeight = htOptions.nHeight || 100;
 	this._elCanvas = bombay.Util.getNewCanvas(nWidth, nHeight);
 	this._elContainer.appendChild(this._elCanvas);
-	
-	// get canvas offset
-	this._htCanvasOffset = bombay.Util.getOffset(this._elCanvas);	
-	this._nWidth = this._elCanvas.width;
-	this._nHeight = this._elCanvas.height;
 };
 
 /**
@@ -40,13 +36,17 @@ bombay.Canvas.prototype._initElement = function(htOptions){
 bombay.Canvas.prototype._initVar = function(htOptions){
 	this._oBrush = null;
 	this._oContext = this._elCanvas.getContext("2d");
+	this._nWidth = this._elCanvas.width;
+	this._nHeight = this._elCanvas.height;
 	this._htCanvasOffset = bombay.Util.getOffset(this._elCanvas);
-	this._nPI2 = Math.PI * 2;
-	this._htLastCoord = {};
+	this._htCoord = {};
+	this._bOnDraw = false;
+	this._nPI2 = Math.PI*2;
 	
 	// use roundPos(). faster but lower quality
 	this._bSpeedUp = ("bSpeedUp" in htOptions) ? htOptions.bSpeedUp : false; 
 	
+	// device information
 	this._htDeviceInfo = bombay.Util.getDeviceInfo(); 
 	this._nRatio = this._htDeviceInfo.nRatio;
 	
@@ -57,8 +57,8 @@ bombay.Canvas.prototype._initVar = function(htOptions){
 	// event listeners
 	var self = this;
 	this._fOnTouchStart = function(e){ self._onTouchStart.call(self, bombay.Util.getTouchInfo(e)); };
-	this._fOnTouchMove  = function(e){ self._onTouchMove.call(self, bombay.Util.getTouchInfo(e)); };
-	this._fOnTouchEnd   = function(e){ self._onTouchEnd.call(self, bombay.Util.getTouchInfo(e)); };	
+	this._fOnTouchMove = function(e){ self._onTouchMove.call(self, bombay.Util.getTouchInfo(e)); };
+	this._fOnTouchEnd = function(e){ self._onTouchEnd.call(self, bombay.Util.getTouchInfo(e)); };	
 };
 
 /**
@@ -67,26 +67,34 @@ bombay.Canvas.prototype._initVar = function(htOptions){
 bombay.Canvas.prototype._attachEvent = function(){
 	var htNames = bombay.Util.getTouchEventName();
 	this._elCanvas.addEventListener(htNames.start, this._fOnTouchStart);	
-	this._elCanvas.addEventListener(htNames.move,  this._fOnTouchMove);
-	this._elCanvas.addEventListener(htNames.end,   this._fOnTouchEnd);
+	this._elCanvas.addEventListener(htNames.move, this._fOnTouchMove);
+	this._elCanvas.addEventListener(htNames.end, this._fOnTouchEnd);
+	this._elCanvas.addEventListener(htNames.cancel, this._fOnTouchEnd);
 	htNames = null;
 };
 
 bombay.Canvas.prototype._onTouchStart = function(htInfo){
 	this._htCoord = {};
+	this._bOnDraw = true;
 	this.setLineColor(this._sLineColor || "#000000");
 };
 
 bombay.Canvas.prototype._onTouchMove = function(htInfo){
-	this._drawByTouch(htInfo);
+	// on PC: prevents mouseover without mousedown
+	if(!this._htDeviceInfo.bHasTouchEvent && !this._bOnDraw){
+		return false;
+	}
+	
+	this.drawLine(htInfo);
 	htInfo.oEvent.preventDefault();
-	//htInfo.oEvent.stopPropagation();
+	htInfo.oEvent.stopPropagation();
 	return false;
 };
 
 bombay.Canvas.prototype._onTouchEnd = function(htInfo){
-	this._drawByTouch(htInfo);
-	this._htCoord = {};	
+	this.drawLine(htInfo);
+	this._htCoord = {};
+	this._bOnDraw = false;
 };
 
 /**
@@ -169,23 +177,34 @@ bombay.Canvas.prototype._getCoordinate = function(htInfo){
 };
 
 /**
- * draw lines by touch event. called automatically at _onTouchMove and _onTouchEnd 
- * @private
- * @param {Hash Table} htInfo
+ * Draw lines by coordinations. 
+ * called automatically by _onTouchMove and _onTouchEnd in common (with touch event offsets)
+ * You can use this manually using 2 arguments(from, to). in this case, coordinations should be internal.
+ * @example
+ * // by event handler (automatically). you can ignore this usage.
+ * _onTouchMove: function(e){
+ * 		this.drawLine(bombay.Util.getTouchInfo(e));
+ * };
+ * 
+ * // by manually. this is how you to really use.
+ * oCanvas.drawLine({"nX":0, "nY":0}, {"nX":200, "nY":200});
+ * @param {Hash Table} htInfoFrom
+ * @param {Number} htInfoFrom.nX
+ * @param {Number} htInfoFrom.nY
+ * @param {Hash Table} htInfoTo (optional)
+ * @param {Number} htInfoTo.nX
+ * @param {Number} htInfoTo.nY
  */
-bombay.Canvas.prototype._drawByTouch = function(htInfo){
-    var htCoordFrom = this._htCoord || this._getCoordinate(htInfo);
-    var htCoordTo = this._getCoordinate(htInfo);
+bombay.Canvas.prototype.drawLine = function(htInfoFrom, htInfoTo){
+	var bDefault = (typeof htInfoTo == "undefined"); 
+    var htCoordFrom = bDefault ? (this._htCoord || this._getCoordinate(htInfoFrom)) : htInfoFrom;
+    var htCoordTo = bDefault ? this._getCoordinate(htInfoFrom) : htInfoTo;
     
-    if(this._oBrush){
-        this._drawBrush(htCoordFrom, htCoordTo);    	
-    } else {
-    	this._drawLine(htCoordFrom, htCoordTo);
-    }
+    this._oBrush ? this._drawLineBrush(htCoordFrom, htCoordTo) : this._drawLineSimple(htCoordFrom, htCoordTo);
 };
 
 /**
- * returns rounded coordinate position for speed.
+ * returns rounded coordinate position for better performance.
  * rounded position value makes line rough but cuts time to process.
  * default : Off
  * @private
@@ -202,7 +221,7 @@ bombay.Canvas.prototype._getRoundedPos = function(n){
  * @param {Hash Table} htCoordTo
  * @param {Hash Table} htOptions
  */
-bombay.Canvas.prototype._drawLine = function(htCoordFrom, htCoordTo, htOptions){
+bombay.Canvas.prototype._drawLineSimple = function(htCoordFrom, htCoordTo, htOptions){
 	var htOptions  = htOptions || {};
 	var oContext   = htOptions.oContext || this._oContext;
 	var nLineWidth = htOptions.nLineWidth || this._nLineWidth;
@@ -238,7 +257,7 @@ bombay.Canvas.prototype._drawLine = function(htCoordFrom, htCoordTo, htOptions){
  * @param {Hash Table} htCoordTo
  * @param {Hash Table} htOptions
  */
-bombay.Canvas.prototype._drawBrush = function(htCoordFrom, htCoordTo, htOptions){
+bombay.Canvas.prototype._drawLineBrush = function(htCoordFrom, htCoordTo, htOptions){
 	// cannot be activated in Android (~4.1)
 	// as brush cannot be colored 
 	if(this._htDeviceInfo.bIsAndroid){
@@ -249,11 +268,10 @@ bombay.Canvas.prototype._drawBrush = function(htCoordFrom, htCoordTo, htOptions)
 	var nLineWidth = htOptions.nLineWidth || this._nLineWidth;
 	var oContext   = htOptions.oContext || this._oContext;
 	var nBrushSize = (nLineWidth * nLineWidth / 10) * this._elBrushImage.width * this._nRatio;
-	
-	// iOS bug
-	if(this._htDeviceInfo.bIsIOS){
-		oContext.drawImage(this._elBrushImage, 0, 0, 1, 1);
-	}
+
+	//if(this._htDeviceInfo.bIsIOS){ // iOS bug?
+	oContext.drawImage(this._elBrushImage, 0, 0, 1, 1);
+	//}/
 
 	var nX, nY;
 	//var nHalfBrushW = this._oBrush.width /2;
