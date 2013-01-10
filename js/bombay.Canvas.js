@@ -261,7 +261,7 @@ bombay.Canvas.prototype._drawLineBrush = function(htCoordFrom, htCoordTo, htOpti
 	// cannot be activated in Android (~4.1)
 	// as brush cannot be colored 
 	if(this._htDeviceInfo.bIsAndroid){
-		return this._drawLine(htCoordFrom, htCoordTo, htOptions);
+		return this._drawLineSimple(htCoordFrom, htCoordTo, htOptions);
 	}
 
 	var htOptions  = htOptions || {};
