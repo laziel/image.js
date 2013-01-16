@@ -43,7 +43,7 @@ bombay.Canvas.prototype._initVar = function(htOptions){
 	this._bOnDraw = false;
 	this._nPI2 = Math.PI*2;
 	
-	// use roundPos(). faster but lower quality
+	// use speedup mode. faster but lower quality
 	this._bSpeedUp = ("bSpeedUp" in htOptions) ? htOptions.bSpeedUp : false; 
 	
 	// device information
@@ -53,6 +53,7 @@ bombay.Canvas.prototype._initVar = function(htOptions){
 	// set default style
 	this.setLineColor(htOptions.sStrokeStyle || "#000000");
 	this.setLineWidth(htOptions.nLineWidth   || 2);	
+	this._oContext.lineCap = htOptions.sLineCap || "round";
 	
 	// event listeners
 	var self = this;
@@ -102,7 +103,7 @@ bombay.Canvas.prototype._onTouchEnd = function(htInfo){
  * @param {String} sColor HEX or RGB(A). shortened HEX acceptable.
  */
 bombay.Canvas.prototype.setLineColor = function(sColor){ 
-//	this._oContext.strokeStyle = sColor;
+	this._oContext.strokeStyle = sColor;
 	this._oContext.fillStyle = sColor;
 	this._sLineColor = sColor;
 	if(this._oBrush){
@@ -115,7 +116,7 @@ bombay.Canvas.prototype.setLineColor = function(sColor){
  * @param {Number} nWidth line width as float. 1.0 ~ 5.0(recommended)  
  */
 bombay.Canvas.prototype.setLineWidth = function(nWidth){
-//	this._oContext.lineWidth = nWidth;
+	this._oContext.lineWidth = nWidth;
 	this._nLineWidth = nWidth;
 };
 
@@ -215,7 +216,7 @@ bombay.Canvas.prototype._getRoundedPos = function(n){
 };
     
 /**
- * draw default line without bombay.Brush
+ * draw default line without bombay.Brush.
  * @private
  * @param {Hash Table} htCoordFrom
  * @param {Hash Table} htCoordTo
@@ -230,24 +231,42 @@ bombay.Canvas.prototype._drawLineSimple = function(htCoordFrom, htCoordTo, htOpt
 	if(this._htDeviceInfo.bIsAndroid){
 		nLineWidth = Math.pow(nLineWidth, 1.7);
 	}
+	
 	// accept temporary line color as option
 	// line color will be restored in _onTouchStart
 	if(htOptions.sColor){
+		oContext.strokeStyle = htOptions.sColor;
 		oContext.fillStyle = htOptions.sColor;
 	}
 	
-	// draw small circles on touch path
-	var nX, nY;
-	var nDistance = parseInt(bombay.Util.distanceBetween(htCoordFrom, htCoordTo));
-	var nAngle = bombay.Util.angleBetween(htCoordFrom, htCoordTo);
-	
+	// draw on touch path	
+	oContext.save();
 	oContext.beginPath();
-	for (var z=0; (z <= nDistance || z==0); z++) {
-		nX = (htCoordFrom.nX + (Math.sin(nAngle) * z) - (nLineWidth / 2)) * this._nRatio;
-		nY = (htCoordFrom.nY + (Math.cos(nAngle) * z) - (nLineWidth / 2)) * this._nRatio;
-		oContext.arc(this._getRoundedPos(nX), this._getRoundedPos(nY), nLineWidth, 0, this._nPI2);
+	
+	if(this._bSpeedUp){ // using line on speedUp mode
+		var nXFrom = this._getRoundedPos(htCoordFrom.nX) * this._nRatio;
+		var nYFrom = this._getRoundedPos(htCoordFrom.nY) * this._nRatio;
+		var nXTo = this._getRoundedPos(htCoordTo.nX) * this._nRatio;
+		var nYTo = this._getRoundedPos(htCoordTo.nY) * this._nRatio;
+		
+		oContext.moveTo(nXFrom, nYFrom);
+		oContext.lineTo(nXTo, nYTo);
+		oContext.stroke();
+	} else {			// using arc on default for smoother line
+		var nX, nY;
+		var nDistance = parseInt(bombay.Util.distanceBetween(htCoordFrom, htCoordTo));
+		var nAngle = bombay.Util.angleBetween(htCoordFrom, htCoordTo);
+		
+		for (var z=0; (z <= nDistance || z==0); z++) {
+			nX = (htCoordFrom.nX + (Math.sin(nAngle) * z) - (nLineWidth / 2)) * this._nRatio;
+			nY = (htCoordFrom.nY + (Math.cos(nAngle) * z) - (nLineWidth / 2)) * this._nRatio;
+			oContext.arc(this._getRoundedPos(nX), this._getRoundedPos(nY), nLineWidth, 0, this._nPI2);
+		}
+		oContext.fill();		
 	}
-	oContext.fill();
+	
+	oContext.closePath();
+	oContext.restore();
 };
 
 /**
