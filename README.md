@@ -17,14 +17,14 @@ http://laziel.com/github/bombayjs/
 - ... and more
 
 ### COMPATIBLE DEVICES ###
-- Bombay.js works on most of devices supports HTML5, including mobile.
+Bombay.js works on most of devices supports HTML5, including mobile.
 
 ### AUTHOR ###
-- JiHan Kim(@laziel)
+JiHan Kim(@laziel)
 
 ### THANKS TO ###
-- Hyunchul Lee, Jongwoon Park, Sangmin Shim(@davidshimjs)
-- Special Thanks to JiHee Hong
+Hyunchul Lee, Jongwoon Park, Sangmin Shim(@davidshimjs)
+Special Thanks to JiHee Hong
 
 ### CONTACT ###
-- Having trouble? You can feel free to contact iam@laziel.com and I’ll help you sort it out.
+Having trouble? You can feel free to contact iam@laziel.com and I’ll help you sort it out.
